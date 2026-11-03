@@ -1,0 +1,25 @@
+{
+  "lists": [
+    {
+      "id": "fifth-grade",
+      "title": "5th Grade Study Words",
+      "note": "50 words from the Two Bee list",
+      "file": "list-fifth-grade.txt"
+    },
+    {
+      "id": "one-bee",
+      "title": "One Bee",
+      "file": "list-one-bee.txt"
+    },
+    {
+      "id": "two-bee",
+      "title": "Two Bee",
+      "file": "list-two-bee.txt"
+    },
+    {
+      "id": "three-bee",
+      "title": "Three Bee",
+      "file": "list-three-bee.txt"
+    }
+  ]
+}

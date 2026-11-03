@@ -1,0 +1,55 @@
+# 5th Grade Study Words (2026-2027 Scripps School Spelling Bee)
+# One word per line. The first spelling is the one that is spoken.
+# Add other accepted spellings after a vertical bar, like:  fertilizer | fertiliser
+# Lines starting with # are ignored. Order here is the order in the app.
+
+Halloween
+incident
+bifocals
+fundraiser
+organism
+disappointment
+helium
+desperate
+concentrate
+stragglers
+monorail
+bratwurst
+Oregon
+solidarity
+cartridge
+civilian
+synthetic
+compliment
+Japanese
+cutlery
+geologist
+quail
+truant
+suggested
+annoyance
+piñata
+albino
+exploratory
+alphabetical
+rebuttal
+calico
+segregation
+fertilizer | fertiliser
+compromise
+investment
+chisel
+bellowed
+atmosphere
+pamphlet
+chimpanzees
+interruption
+territory
+ridiculous
+indigo
+integrity
+prejudice
+sputnik
+tortillas
+apprentice
+Caesar

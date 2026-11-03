@@ -66,7 +66,16 @@
   .bar { height: 12px; background: var(--line); border-radius: 99px; margin-top: 12px; overflow: hidden; }
   .bar > div { height: 100%; width: 0; background: var(--honey); border-radius: 99px; transition: width .35s ease; }
   body.retest .bar > div { background: var(--retest); }
-  .status { margin-top: 6px; font-size: .9rem; color: var(--muted); }
+  .statusrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+  .listbtn {
+    min-width: 0; display: inline-flex; align-items: center; gap: 4px;
+    font: inherit; font-weight: 600; font-size: .95rem; color: var(--ink);
+    background: var(--card); border: 2px solid var(--line); border-radius: 99px;
+    padding: 3px 8px 3px 12px; cursor: pointer;
+  }
+  .listbtn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .listbtn svg { width: 18px; height: 18px; flex: none; }
+  .status { font-size: .9rem; color: var(--muted); text-align: right; min-width: 0; }
   body.retest .status { color: var(--retest); font-weight: 500; }
 
   main { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 18px; gap: 18px; }
@@ -92,8 +101,9 @@
   .result .box.good { background: var(--good-bg); color: var(--good); }
   .result .box.bad { background: var(--bad-bg); color: var(--bad); }
   .result .headline { font-weight: 700; font-size: 1.25rem; }
-  .result .answer { font-size: 1.8rem; font-weight: 700; letter-spacing: .04em; margin-top: 2px; }
-  .result .typed { font-size: .95rem; margin-top: 2px; opacity: .85; }
+  .result .answer { font-size: 1.8rem; font-weight: 700; letter-spacing: .04em; margin-top: 2px; overflow-wrap: anywhere; }
+  .result .typed { font-size: .95rem; margin-top: 2px; opacity: .85; overflow-wrap: anywhere; }
+  .result .plain { padding-top: 14px; color: var(--muted); font-size: 1.05rem; }
   .toast { position: absolute; left: 0; right: 0; top: 10px; font-weight: 700; font-size: 1.2rem; color: var(--good); opacity: 0; transition: opacity .25s ease; pointer-events: none; }
   .toast.show { opacity: 1; }
   .toast.bad { color: var(--bad); }
@@ -115,7 +125,7 @@
   .pos { min-width: 72px; text-align: center; color: var(--muted); font-weight: 500; }
   .note { color: var(--bad); font-size: .9rem; text-align: center; }
 
-  /* Missed words sheet */
+  /* Sheets (missed words, list picker) */
   .sheet-wrap { position: fixed; inset: 0; z-index: 10; display: flex; align-items: flex-end; justify-content: center; }
   .backdrop { position: absolute; inset: 0; background: rgba(10, 20, 50, .55); }
   .sheet {
@@ -131,10 +141,13 @@
   .x { font: inherit; font-size: 1.1rem; width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
   .mlist { list-style: none; margin: 0; padding: 0; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; border-top: 2px solid var(--line); }
   .mlist li { border-bottom: 1px solid var(--line); }
-  .mrow { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: none; border: 0; color: inherit; font: inherit; text-align: left; padding: 12px 2px; cursor: pointer; }
-  .mw { display: block; font-size: 1.3rem; font-weight: 600; }
-  .mt { display: block; font-size: .9rem; color: var(--muted); }
+  .mrow, .lrow { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: none; border: 0; color: inherit; font: inherit; text-align: left; padding: 12px 2px; cursor: pointer; }
+  .mw, .lt { display: block; font-size: 1.3rem; font-weight: 600; overflow-wrap: anywhere; }
+  .mt, .ls { display: block; font-size: .9rem; color: var(--muted); }
   .mrow svg { width: 26px; height: 26px; flex: none; color: var(--muted); }
+  .lrow:disabled { opacity: .45; cursor: default; }
+  .lrow.current .lt { color: var(--ink); }
+  .tick { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--honey); color: var(--honey-ink); font-weight: 700; }
   .mlist .empty { padding: 28px 8px; text-align: center; color: var(--muted); font-size: 1.05rem; }
   .sheet-foot { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
   .fixednote { text-align: center; color: var(--good); font-weight: 500; font-size: .95rem; }
@@ -156,14 +169,20 @@
 <body>
   <header class="top">
     <div class="topline">
-      <div class="score" id="score" aria-live="polite">0/50<small>correct</small></div>
+      <div class="score" id="score" aria-live="polite">0/0<small>correct</small></div>
       <div class="actions">
         <button class="missed" id="missed" type="button"><span id="mlabel">Missed</span><span class="count zero" id="mcount">0</span></button>
         <button class="reset" id="reset" type="button">Start over</button>
       </div>
     </div>
     <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="50" aria-valuenow="0" id="bar"><div id="barfill"></div></div>
-    <div class="status" id="status">0 of 50 answered</div>
+    <div class="statusrow">
+      <button class="listbtn" id="listbtn" type="button" aria-haspopup="dialog" aria-label="Choose a word list">
+        <span id="listname">Loading…</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="status" id="status"></div>
+    </div>
   </header>
 
   <main>
@@ -184,15 +203,16 @@
       <input type="text" id="answer" placeholder="Type the spelling" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="next" aria-label="Type the spelling">
       <div class="nav">
         <button id="back" type="button">Back</button>
-        <div class="pos" id="pos">1 / 50</div>
+        <div class="pos" id="pos">0 / 0</div>
         <button id="next" class="next" type="button">Next</button>
       </div>
-      <div class="note" id="note" hidden>This browser can't speak words aloud. Try Chrome or Safari.</div>
+      <div class="note" id="note" hidden></div>
     </div>
   </footer>
 
+  <!-- Missed words -->
   <div class="sheet-wrap" id="sheet" hidden>
-    <div class="backdrop" id="backdrop"></div>
+    <div class="backdrop" data-close="sheet"></div>
     <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
       <div class="sheet-head">
         <h2 id="sheetTitle">Missed words</h2>
@@ -206,24 +226,37 @@
     </section>
   </div>
 
+  <!-- Word list picker -->
+  <div class="sheet-wrap" id="lsheet" hidden>
+    <div class="backdrop" data-close="lsheet"></div>
+    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="lsheetTitle">
+      <div class="sheet-head">
+        <h2 id="lsheetTitle">Choose a word list</h2>
+        <button class="x" id="closeLsheet" type="button" aria-label="Close">&#10005;</button>
+      </div>
+      <ul class="mlist" id="llist"></ul>
+    </section>
+  </div>
+
 <script>
 (function () {
-  var WORDS = [
+  // Built-in copy of the 5th grade list. Used only if the list files can't be loaded,
+  // and to carry over progress saved by earlier versions of the app.
+  var FIFTH = [
     "Halloween","incident","bifocals","fundraiser","organism","disappointment","helium","desperate","concentrate",
     "stragglers","monorail","bratwurst","Oregon","solidarity","cartridge","civilian","synthetic",
     "compliment","Japanese","cutlery","geologist","quail","truant","suggested","annoyance","piñata","albino",
-    "exploratory","alphabetical","rebuttal","calico","segregation","fertilizer",
+    "exploratory","alphabetical","rebuttal","calico","segregation","fertilizer | fertiliser",
     "compromise","investment","chisel","bellowed","atmosphere","pamphlet","chimpanzees","interruption","territory",
     "ridiculous","indigo","integrity","prejudice","sputnik","tortillas","apprentice","Caesar"
   ];
-  var ALT = { "fertilizer": ["fertiliser"] };
-  var TOTAL = WORDS.length;
-  var KEY = "spellingbee-fifth-grade-v1";
+  var OLD_KEY = "spellingbee-fifth-grade-v1";
+  var LAST_KEY = "sbee:last";
+  var STATE_PREFIX = "sbee:list:";
 
-  // idx/answers: the main 50-word run (first attempt, never changed by retests)
-  // fixed: words that were missed, then spelled correctly in a retest
-  // rt: the retest in progress, or null
-  var S = { idx: 0, answers: {}, fixed: {}, rt: null };
+  var LISTS = [];   // every list from the manifest
+  var L = null;     // the list in use
+  var S = null;     // saved state for that list: { cur, answers, fixed, rt }
 
   var $ = function (id) { return document.getElementById(id); };
   var els = {
@@ -232,63 +265,117 @@
     answer: $("answer"), back: $("back"), next: $("next"),
     pos: $("pos"), reset: $("reset"), note: $("note"),
     missed: $("missed"), mlabel: $("mlabel"), mcount: $("mcount"),
-    sheet: $("sheet"), backdrop: $("backdrop"), closeSheet: $("closeSheet"),
-    sheetTitle: $("sheetTitle"), mlist: $("mlist"), fixednote: $("fixednote"), retest: $("retest")
+    listbtn: $("listbtn"), listname: $("listname"),
+    sheet: $("sheet"), closeSheet: $("closeSheet"),
+    sheetTitle: $("sheetTitle"), mlist: $("mlist"), fixednote: $("fixednote"), retest: $("retest"),
+    lsheet: $("lsheet"), closeLsheet: $("closeLsheet"), llist: $("llist")
   };
 
   // ---- helpers ----
+  function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
   function norm(s) {
     return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z]/g, "");
   }
-  function accepted(w) {
-    var name = WORDS[w];
-    return [norm(name)].concat((ALT[name] || []).map(norm));
+  function okIn(map, e) { return has(map, e.w) && e.ok.indexOf(norm(map[e.w])) !== -1; }
+
+  // One word per line. "fertilizer | fertiliser" = both spellings accepted, the first is spoken.
+  function parseList(text) {
+    var out = [], seen = {};
+    text.split(/\r?\n/).forEach(function (line) {
+      line = line.trim();
+      if (!line || line.charAt(0) === "#") return;
+      var parts = line.split("|").map(function (s) { return s.trim().replace(/\*+$/, "").trim(); }).filter(Boolean);
+      if (!parts.length || has(seen, parts[0])) return;
+      seen[parts[0]] = true;
+      out.push({ w: parts[0], ok: parts.map(norm).filter(Boolean) });
+    });
+    return out;
   }
-  function okIn(map, w) {
-    return (w in map) && accepted(w).indexOf(norm(map[w])) !== -1;
+  function makeList(meta, words) {
+    var l = { id: String(meta.id), title: meta.title, note: meta.note || "", words: words, index: Object.create(null), byKey: Object.create(null), error: false };
+    words.forEach(function (e, i) { l.index[e.w] = i; l.byKey[e.w] = e; });
+    return l;
   }
-  function cw()    { return S.rt ? S.rt.order[S.rt.pos] : S.idx; }   // current word number
-  function pos()   { return S.rt ? S.rt.pos : S.idx; }
-  function total() { return S.rt ? S.rt.order.length : TOTAL; }
+
+  // ---- notes under the buttons ----
+  var notes = [];
+  function addNote(msg) { notes.push(msg); els.note.textContent = notes.join(" "); els.note.hidden = false; }
+
+  // ---- saving ----
+  function freshState(list) {
+    return { cur: list.words.length ? list.words[0].w : null, answers: {}, fixed: {}, rt: null };
+  }
+  function migrateOld(s) {
+    var raw = localStorage.getItem(OLD_KEY);
+    if (!raw) return;
+    var d = JSON.parse(raw);
+    var names = FIFTH.map(function (x) { return x.split("|")[0].trim(); });
+    var conv = function (m) {
+      var o = {};
+      Object.keys(m || {}).forEach(function (i) { if (names[+i]) o[names[+i]] = m[i]; });
+      return o;
+    };
+    if (typeof d.idx === "number" && names[d.idx]) s.cur = names[d.idx];
+    s.answers = conv(d.answers);
+    s.fixed = conv(d.fixed);
+    if (d.rt && Array.isArray(d.rt.order)) {
+      var order = d.rt.order.map(function (i) { return names[i]; }).filter(Boolean);
+      if (order.length) s.rt = { order: order, pos: +d.rt.pos || 0, answers: conv(d.rt.answers) };
+    }
+  }
+  function readState(list) {
+    var s = freshState(list);
+    try {
+      var raw = localStorage.getItem(STATE_PREFIX + list.id);
+      if (raw) {
+        var d = JSON.parse(raw) || {};
+        if (typeof d.cur === "string") s.cur = d.cur;
+        if (d.answers && typeof d.answers === "object") s.answers = d.answers;
+        if (d.fixed && typeof d.fixed === "object") s.fixed = d.fixed;
+        var r = d.rt;
+        if (r && Array.isArray(r.order) && r.answers && typeof r.answers === "object") {
+          var order = r.order.filter(function (k) { return k in list.index; });
+          if (order.length) s.rt = { order: order, pos: Math.min(Math.max(+r.pos || 0, 0), order.length - 1), answers: r.answers };
+        }
+      } else if (list.id === "fifth-grade") {
+        migrateOld(s);
+      }
+    } catch (e) {}
+    if (s.rt) s.rt.pos = Math.min(Math.max(s.rt.pos, 0), s.rt.order.length - 1);
+    if (!(s.cur in list.index) && list.words.length) s.cur = list.words[0].w;
+    return s;
+  }
+  function save() {
+    try {
+      localStorage.setItem(STATE_PREFIX + L.id, JSON.stringify(S));
+      localStorage.setItem(LAST_KEY, L.id);
+    } catch (e) {}
+  }
+
+  // ---- what the app is looking at right now ----
+  function run()   { return S.rt ? S.rt.order.map(function (k) { return L.byKey[k]; }) : L.words; }
+  function pos()   { return S.rt ? S.rt.pos : L.index[S.cur]; }
+  function total() { return S.rt ? S.rt.order.length : L.words.length; }
   function amap()  { return S.rt ? S.rt.answers : S.answers; }
-  function wordsInRun() {
-    if (S.rt) return S.rt.order;
-    var a = []; for (var i = 0; i < TOTAL; i++) a.push(i); return a;
+  function cur()   { return run()[pos()]; }
+  function statsOf(list, state) {
+    var done = 0, right = 0;
+    list.words.forEach(function (e) {
+      if (has(state.answers, e.w)) { done++; if (okIn(state.answers, e)) right++; }
+    });
+    return { done: done, right: right };
   }
   function counts() {
     var m = amap(), done = 0, right = 0;
-    wordsInRun().forEach(function (w) {
-      if (w in m) { done++; if (okIn(m, w)) right++; }
+    run().forEach(function (e) {
+      if (has(m, e.w)) { done++; if (okIn(m, e)) right++; }
     });
     return { done: done, right: right };
   }
   function missedList() {
-    var a = [];
-    for (var i = 0; i < TOTAL; i++) {
-      if ((i in S.answers) && !okIn(S.answers, i) && !S.fixed[i]) a.push(i);
-    }
-    return a;
-  }
-
-  // ---- saving ----
-  function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
-  }
-  function load() {
-    try {
-      var raw = localStorage.getItem(KEY);
-      if (!raw) return;
-      var d = JSON.parse(raw);
-      if (!d) return;
-      if (typeof d.idx === "number" && d.idx >= 0 && d.idx < TOTAL) S.idx = d.idx;
-      if (d.answers && typeof d.answers === "object") S.answers = d.answers;
-      if (d.fixed && typeof d.fixed === "object") S.fixed = d.fixed;
-      var r = d.rt;
-      if (r && Array.isArray(r.order) && r.order.length && typeof r.pos === "number" &&
-          r.pos >= 0 && r.pos < r.order.length && r.answers && typeof r.answers === "object") {
-        S.rt = { order: r.order, pos: r.pos, answers: r.answers };
-      }
-    } catch (e) {}
+    return L.words.filter(function (e) {
+      return has(S.answers, e.w) && !okIn(S.answers, e) && !has(S.fixed, e.w);
+    });
   }
 
   // ---- speech ----
@@ -308,17 +395,18 @@
     pickVoice();
     speechSynthesis.onvoiceschanged = pickVoice;
   } else {
-    els.note.hidden = false;
+    addNote("This browser can't speak words aloud. Try Chrome or Safari.");
   }
 
   var speakTimer = null;
-  function say(slow, w) {
-    if (!canSpeak) return;
-    if (w === undefined) w = cw();
+  function say(slow, entry) {
+    if (!canSpeak || !L) return;
+    entry = entry || cur();
+    if (!entry) return;
     clearTimeout(speakTimer);
     speechSynthesis.cancel();
     speakTimer = setTimeout(function () {
-      var u = new SpeechSynthesisUtterance(WORDS[w]);
+      var u = new SpeechSynthesisUtterance(entry.w);
       u.lang = "en-US";
       if (voice) u.voice = voice;
       u.rate = slow ? 0.5 : 0.85;
@@ -330,7 +418,19 @@
 
   // ---- render ----
   function render() {
-    var rt = !!S.rt, T = total(), p = pos(), w = cw(), m = amap();
+    if (!L) return;
+    els.listname.textContent = L.title;
+    var T = total();
+    if (!T) {
+      els.score.innerHTML = "0/0<small>correct</small>";
+      els.fill.style.width = "0%";
+      els.status.textContent = "";
+      els.pos.textContent = "0 / 0";
+      els.back.disabled = els.next.disabled = els.answer.disabled = true;
+      els.result.innerHTML = '<div class="plain">This list has no words yet.</div>';
+      return;
+    }
+    var rt = !!S.rt, p = pos(), e = cur(), m = amap();
     var c = counts(), last = p === T - 1;
     document.body.classList.toggle("retest", rt);
 
@@ -343,7 +443,7 @@
     } else if (rt) {
       els.status.textContent = "Retest done! " + c.right + " of " + T + " correct";
     } else {
-      els.status.textContent = "All " + T + " done! Final score " + c.right + "/" + T;
+      els.status.textContent = "All done! Final score " + c.right + "/" + T;
     }
 
     var ml = missedList().length;
@@ -357,20 +457,20 @@
     els.back.disabled = p === 0;
     els.next.textContent = last ? "Finish" : "Next";
 
-    var answered = w in m;
+    var answered = has(m, e.w);
     els.next.disabled = last && answered;
     els.answer.disabled = answered;
-    els.answer.value = answered ? m[w] : els.answer.value;
+    els.answer.value = answered ? m[e.w] : els.answer.value;
 
     if (!answered) {
       els.result.innerHTML = "";
-    } else if (okIn(m, w)) {
+    } else if (okIn(m, e)) {
       els.result.innerHTML = '<div class="box good"><div class="headline">Correct!</div><div class="answer"></div></div>';
-      els.result.querySelector(".answer").textContent = WORDS[w];
+      els.result.querySelector(".answer").textContent = e.w;
     } else {
       els.result.innerHTML = '<div class="box bad"><div class="headline">Not quite. The word is:</div><div class="answer"></div><div class="typed"></div></div>';
-      els.result.querySelector(".answer").textContent = WORDS[w];
-      els.result.querySelector(".typed").textContent = "You typed: " + m[w];
+      els.result.querySelector(".answer").textContent = e.w;
+      els.result.querySelector(".typed").textContent = "You typed: " + m[e.w];
       if (!last) {
         var tip = document.createElement("div");
         tip.className = "typed";
@@ -386,8 +486,8 @@
   }
 
   function go(n, autoSpeak) {
-    if (n < 0 || n >= total()) return;
-    if (S.rt) S.rt.pos = n; else S.idx = n;
+    if (!L || n < 0 || n >= total()) return;
+    if (S.rt) S.rt.pos = n; else S.cur = L.words[n].w;
     els.toast.classList.remove("show");
     els.answer.value = "";
     save();
@@ -407,9 +507,10 @@
 
   // Next does everything: check the spelling, then move on only if it is right.
   function handleNext() {
+    if (!L || !total()) return;
     els.toast.classList.remove("show");
-    var w = cw(), m = amap(), p = pos();
-    if (w in m) { go(p + 1, true); return; }       // already answered: just move on
+    var e = cur(), m = amap(), p = pos();
+    if (has(m, e.w)) { go(p + 1, true); return; }   // already answered: just move on
     var v = els.answer.value.trim();
     if (!v) {
       els.answer.classList.remove("shake");
@@ -418,9 +519,9 @@
       showToast("Type your best guess first", true);
       return;
     }
-    m[w] = v;
-    var good = okIn(m, w);
-    if (good && S.rt) S.fixed[w] = true;           // missed before, right now
+    m[e.w] = v;
+    var good = okIn(m, e);
+    if (good && S.rt) S.fixed[e.w] = true;          // missed before, right now
     if (good && p < total() - 1) {
       go(p + 1, true);
       showToast("Correct!");
@@ -430,34 +531,37 @@
     }
   }
 
-  // ---- missed words sheet and retest ----
+  // ---- sheets ----
+  function closeSheets() { els.sheet.hidden = true; els.lsheet.hidden = true; }
+  function anySheetOpen() { return !els.sheet.hidden || !els.lsheet.hidden; }
+
   var SPEAKER_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
 
-  function buildList() {
+  function buildMissed() {
     var list = missedList();
     els.mlist.innerHTML = "";
     els.sheetTitle.textContent = "Missed words (" + list.length + ")";
-    var fixedCount = Object.keys(S.fixed).length;
+    var fixedCount = Object.keys(S.fixed).filter(function (k) { return k in L.index; }).length;
 
     if (!list.length) {
-      var e = document.createElement("li");
-      e.className = "empty";
-      e.textContent = fixedCount ? "All missed words are fixed. Great job!" : "No missed words yet. Keep spelling!";
-      els.mlist.appendChild(e);
+      var emp = document.createElement("li");
+      emp.className = "empty";
+      emp.textContent = fixedCount ? "All missed words are fixed. Great job!" : "No missed words yet. Keep spelling!";
+      els.mlist.appendChild(emp);
     }
-    list.forEach(function (w) {
+    list.forEach(function (e) {
       var li = document.createElement("li");
       var b = document.createElement("button");
       b.type = "button";
       b.className = "mrow";
-      b.setAttribute("aria-label", "Hear " + WORDS[w]);
+      b.setAttribute("aria-label", "Hear " + e.w);
       var left = document.createElement("span");
-      var a = document.createElement("span"); a.className = "mw"; a.textContent = WORDS[w];
-      var t = document.createElement("span"); t.className = "mt"; t.textContent = "You typed: " + S.answers[w];
+      var a = document.createElement("span"); a.className = "mw"; a.textContent = e.w;
+      var t = document.createElement("span"); t.className = "mt"; t.textContent = "You typed: " + S.answers[e.w];
       left.appendChild(a); left.appendChild(t);
       var ico = document.createElement("span"); ico.innerHTML = SPEAKER_SVG;
       b.appendChild(left); b.appendChild(ico);
-      b.addEventListener("click", function () { say(false, w); });
+      b.addEventListener("click", function () { say(false, e); });
       li.appendChild(b);
       els.mlist.appendChild(li);
     });
@@ -470,18 +574,70 @@
     els.fixednote.textContent = fixedCount + " fixed in retests";
   }
 
-  function openSheet() {
-    buildList();
+  function openMissed() {
+    if (!L) return;
+    buildMissed();
+    els.lsheet.hidden = true;
     els.sheet.hidden = false;
     els.closeSheet.focus();
   }
-  function closeSheet() { els.sheet.hidden = true; }
 
+  function buildLists() {
+    els.llist.innerHTML = "";
+    LISTS.forEach(function (l) {
+      var li = document.createElement("li");
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "lrow" + (l === L ? " current" : "");
+      b.disabled = l.error;
+      var left = document.createElement("span");
+      var t = document.createElement("span"); t.className = "lt"; t.textContent = l.title;
+      left.appendChild(t);
+      if (l.note) { var n = document.createElement("span"); n.className = "ls"; n.textContent = l.note; left.appendChild(n); }
+      var s = document.createElement("span"); s.className = "ls";
+      if (l.error) {
+        s.textContent = "Couldn't load this list";
+      } else {
+        var st = statsOf(l, l === L ? S : readState(l));
+        s.textContent = l.words.length + " words" + (st.done ? ", " + st.done + " answered, " + st.right + " correct" : "");
+      }
+      left.appendChild(s);
+      b.appendChild(left);
+      if (l === L) { var tick = document.createElement("span"); tick.className = "tick"; tick.setAttribute("aria-label", "Current list"); tick.textContent = "\u2713"; b.appendChild(tick); }
+      b.addEventListener("click", function () { switchList(l); });
+      li.appendChild(b);
+      els.llist.appendChild(li);
+    });
+  }
+  function openLists() {
+    if (!L) return;
+    buildLists();
+    els.sheet.hidden = true;
+    els.lsheet.hidden = false;
+    els.closeLsheet.focus();
+  }
+
+  function switchList(l) {
+    if (l.error) return;
+    if (canSpeak) speechSynthesis.cancel();
+    closeSheets();
+    if (l === L) return;
+    L = l;
+    S = readState(L);
+    els.answer.value = "";
+    els.toast.classList.remove("show");
+    save();
+    render();
+    focusAnswer();
+    say(false);
+  }
+
+  // ---- retest ----
   function startRetest() {
-    var order = missedList();
+    var order = missedList().map(function (e) { return e.w; });
     if (!order.length) return;
     S.rt = { order: order, pos: 0, answers: {} };
-    closeSheet();
+    closeSheets();
     els.answer.value = "";
     save();
     render();
@@ -504,12 +660,14 @@
   });
   els.next.addEventListener("click", handleNext);
   els.back.addEventListener("click", function () { go(pos() - 1, true); });
-  els.missed.addEventListener("click", function () { if (S.rt) exitRetest(); else openSheet(); });
-  els.closeSheet.addEventListener("click", closeSheet);
-  els.backdrop.addEventListener("click", closeSheet);
+  els.missed.addEventListener("click", function () { if (!L) return; if (S.rt) exitRetest(); else openMissed(); });
+  els.listbtn.addEventListener("click", openLists);
+  els.closeSheet.addEventListener("click", closeSheets);
+  els.closeLsheet.addEventListener("click", closeSheets);
+  Array.prototype.forEach.call(document.querySelectorAll(".backdrop"), function (b) { b.addEventListener("click", closeSheets); });
   els.retest.addEventListener("click", startRetest);
   document.addEventListener("keydown", function (e) {
-    if (!els.sheet.hidden) { if (e.key === "Escape") closeSheet(); return; }
+    if (anySheetOpen()) { if (e.key === "Escape") closeSheets(); return; }
     if (e.key === "Enter" && els.answer.disabled && document.activeElement === document.body) {
       handleNext();
     }
@@ -517,6 +675,7 @@
 
   var resetTimer = null;
   els.reset.addEventListener("click", function () {
+    if (!L) return;
     if (!els.reset.classList.contains("confirm")) {
       els.reset.classList.add("confirm");
       els.reset.textContent = "Tap to erase";
@@ -529,12 +688,51 @@
     clearTimeout(resetTimer);
     els.reset.classList.remove("confirm");
     els.reset.textContent = "Start over";
-    S.answers = {}; S.fixed = {}; S.rt = null;
-    go(0, false);
+    S = freshState(L);
+    els.answer.value = "";
+    save();
+    render();
+    focusAnswer();
   });
 
-  load();
-  render();
+  // ---- start up: read lists.json, then each list file it names ----
+  function fetchText(url) {
+    return fetch(url, { cache: "no-cache" }).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    });
+  }
+  function loadLists() {
+    return fetchText("lists.json").then(function (txt) {
+      var m = JSON.parse(txt);
+      var metas = (Array.isArray(m) ? m : m.lists) || [];
+      metas = metas.filter(function (x) { return x && x.id && x.title && x.file; });
+      if (!metas.length) throw new Error("lists.json has no lists");
+      return Promise.all(metas.map(function (meta) {
+        return fetchText(meta.file)
+          .then(function (t) { return makeList(meta, parseList(t)); })
+          .catch(function () { var l = makeList(meta, []); l.error = true; return l; });
+      }));
+    });
+  }
+  function start(lists) {
+    LISTS = lists;
+    var usable = LISTS.filter(function (l) { return !l.error; });
+    var lastId = null;
+    try { lastId = localStorage.getItem(LAST_KEY); } catch (e) {}
+    L = usable.filter(function (l) { return l.id === lastId; })[0] || usable[0];
+    S = readState(L);
+    render();
+  }
+
+  loadLists().then(function (lists) {
+    if (!lists.some(function (l) { return !l.error; })) throw new Error("no list could be loaded");
+    if (lists.some(function (l) { return l.error; })) addNote("One or more word lists could not be loaded.");
+    start(lists);
+  }).catch(function () {
+    addNote("Couldn't load the word lists, so the built-in 5th grade list is being used.");
+    start([makeList({ id: "fifth-grade", title: "5th Grade Study Words" }, parseList(FIFTH.join("\n")))]);
+  });
 })();
 </script>
 </body>

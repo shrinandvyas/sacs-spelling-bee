@@ -1,0 +1,155 @@
+# Three Bee (2026-2027 Scripps School Spelling Bee Study List)
+# One word per line. The first spelling is the one that is spoken.
+# Add other accepted spellings after a vertical bar, like:  fertilizer | fertiliser
+# Lines starting with # are ignored. Order here is the order in the app.
+
+newt
+thrummed
+censers
+lapels
+generosity
+burnished
+embankment
+unrelenting
+wallowing
+imperial
+mortar
+arsonists
+mewling
+generator
+persistent
+authority
+panoramic
+Doberman
+dominion
+decisively
+gauntlets
+inanimate
+lemmings
+auditory
+appetizing
+sentinels
+frequency
+self-sufficient
+prospective
+subscription
+blithely
+conspicuous
+preconception
+procession
+tenuous
+perpendicular
+hemisphere
+seminal
+saxophone
+torrential
+reluctance
+consulate
+canter
+sauntered
+propeller
+modish
+cuisine
+juniper
+settee
+unconscious
+influenza
+palazzo
+finesse
+foliage
+odorant | odourant
+irrelevant
+curriculum
+quizzically
+diplomatically
+enigmatic
+increments
+crocheted
+calibrate
+hypothesis
+reassurance
+apologetic
+credenza
+comprehensible
+protectorate
+Delaware
+phenomenon
+trenchant
+pulmonary
+undulating
+alleviate
+despondent
+approximation
+phantasmal
+legation
+echolocation
+glycerin | glycerine
+brazier | brasier
+diffidence
+conflagration
+alabaster
+arachnid
+butane
+thermotaxis
+arugula
+pathologically
+cataract
+inaugurate
+vibrometer
+affinities
+quiche
+bioluminescence
+mayonnaise
+embodiment
+euphemism
+chickadee
+sputum
+porpoises
+acolyte
+asymmetric
+cerulean
+psychological
+innocuous
+sharpei
+cul-de-sac
+assemblage
+Tripoli
+endothermy
+electrolytes
+leprosy
+neurological
+éclair
+ototoxic
+eureka
+mysticetes
+irascibility
+Aphrodite
+annelids
+Eritrea
+a cappella
+bogong moth
+kerosene | kerosine
+forsythia
+Amharic
+yakuza
+Pennsylvania
+salicylic acid
+Gloucester
+sensilla
+ampulla
+stomatopods
+prosciutto
+eponymous
+solenodon
+frankincense
+chitinous
+Presbyterian
+Sierra Leone
+trichobothria
+Krio
+lactobacillus
+Bildungsroman
+Cappadocia
+Addis Ababa
+spes phthisica
+vibrissae
